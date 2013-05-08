@@ -85,7 +85,7 @@ public class RattleVerificationExample {
 				}
 
 				String value = bodyRow.get(j);
-				if(EvaluationUtil.isMissing(value)){
+				if(CsvUtil.isMissing(value)){
 					continue;
 				}
 
@@ -143,8 +143,7 @@ public class RattleVerificationExample {
 					break;
 				}
 
-				List<String> row = Arrays.asList(line.split(","));
-				table.add(row);
+				table.add(CsvUtil.parseLine(line, ","));
 			}
 
 			return table;

@@ -52,7 +52,7 @@ public class CsvEvaluationExample {
 
 			lines.add(headerLine + separator + "JPMML");
 
-			List<String> header = parseLine(headerLine, separator);
+			List<String> header = CsvUtil.parseLine(headerLine, separator);
 
 			Map<FieldName, DataField> dataFields = new LinkedHashMap<FieldName, DataField>();
 
@@ -76,7 +76,7 @@ public class CsvEvaluationExample {
 					break;
 				}
 
-				List<String> body = parseLine(bodyLine, separator);
+				List<String> body = CsvUtil.parseLine(bodyLine, separator);
 
 				Map<FieldName, Object> parameters = new LinkedHashMap<FieldName, Object>();
 
@@ -90,7 +90,7 @@ public class CsvEvaluationExample {
 					}
 
 					String value = body.get(i);
-					if(EvaluationUtil.isMissing(value)){
+					if(CsvUtil.isMissing(value)){
 						continue body;
 					}
 
@@ -137,17 +137,5 @@ public class CsvEvaluationExample {
 		}
 
 		return ";";
-	}
-
-	static
-	private List<String> parseLine(String line, String separator){
-		List<String> result = new ArrayList<String>();
-
-		String[] cells = line.split(separator);
-		for(String cell : cells){
-			result.add(cell.replace(',', '.'));
-		}
-
-		return result;
 	}
 }
