@@ -78,13 +78,18 @@ public class RattleVerificationExample {
 
 			for(int j = 0; j < headerRow.size(); j++){
 				FieldName name = new FieldName(headerRow.get(j));
-				DataField dataField = nameDataFields.get(name);
 
+				DataField dataField = nameDataFields.get(name);
 				if(dataField == null){
 					continue;
 				}
 
-				parameters.put(name, ParameterUtil.parse(dataField, bodyRow.get(j)));
+				String value = bodyRow.get(j);
+				if(EvaluationUtil.isMissing(value)){
+					continue;
+				}
+
+				parameters.put(name, ParameterUtil.parse(dataField, value));
 			}
 
 			Object result = evaluator.evaluate(parameters);
@@ -134,7 +139,7 @@ public class RattleVerificationExample {
 
 			while(true){
 				String line = reader.readLine();
-				if(line == null || (line).equals("")){
+				if(line == null){
 					break;
 				}
 

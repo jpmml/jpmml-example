@@ -44,7 +44,7 @@ public class CsvEvaluationExample {
 
 		try {
 			String headerLine = reader.readLine();
-			if(isEmpty(headerLine)){
+			if(headerLine == null){
 				return;
 			}
 
@@ -72,7 +72,7 @@ public class CsvEvaluationExample {
 
 			while(true){
 				String bodyLine = reader.readLine();
-				if(isEmpty(bodyLine)){
+				if(bodyLine == null){
 					break;
 				}
 
@@ -89,7 +89,12 @@ public class CsvEvaluationExample {
 						continue body;
 					}
 
-					parameters.put(name, ParameterUtil.parse(dataField, body.get(i)));
+					String value = body.get(i);
+					if(EvaluationUtil.isMissing(value)){
+						continue body;
+					}
+
+					parameters.put(name, ParameterUtil.parse(dataField, value));
 				}
 
 				Object result = evaluator.evaluate(parameters);
@@ -118,11 +123,6 @@ public class CsvEvaluationExample {
 		} finally {
 			writer.close();
 		}
-	}
-
-	static
-	private boolean isEmpty(String line){
-		return line == null || (line).equals("");
 	}
 
 	static
