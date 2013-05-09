@@ -17,6 +17,10 @@ public class CsvUtil {
 		String[] cells = line.split(separator);
 		for(String cell : cells){
 
+			// Remove quotation marks, if any
+			cell = stripQuotes(cell, "\"");
+			cell = stripQuotes(cell, "\'");
+
 			// Standardize decimal marks to Full Stop (US)
 			if(!(",").equals(separator)){
 				cell = cell.replace(',', '.');
@@ -26,6 +30,16 @@ public class CsvUtil {
 		}
 
 		return result;
+	}
+
+	static
+	private String stripQuotes(String string, String quote){
+
+		if(string.startsWith(quote) && string.endsWith(quote)){
+			string = string.substring(quote.length(), string.length() - quote.length());
+		}
+
+		return string;
 	}
 
 	static
