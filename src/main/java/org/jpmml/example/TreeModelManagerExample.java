@@ -23,7 +23,7 @@ public class TreeModelManagerExample {
 		parameters.put(new FieldName("windy"), "false");
 		parameters.put(new FieldName("outlook"), "overcast");
 
-		Node node = treeModelManager.scoreModel(parameters);
+		Node node = treeModelManager.evaluateTree(new ModelManagerEvaluationContext(treeModelManager, parameters));
 
 		System.out.println("Node id: " + node.getId());
 		System.out.println("Node score: " + node.getScore());

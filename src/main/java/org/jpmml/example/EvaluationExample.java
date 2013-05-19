@@ -38,33 +38,46 @@ public class EvaluationExample {
 
 		Map<FieldName, ?> parameters = readParameters(evaluator);
 
-		Object result = evaluator.evaluate(parameters);
+		FieldName target = evaluator.getTarget();
 
-		System.out.println("Model output: " + result);
+		Map<FieldName, ?> result = evaluator.evaluate(parameters);
+
+		Object targetValue = EvaluatorUtil.decode(result.get(target));
+		System.out.println("Model output: " + targetValue);
 	}
 
 	static
 	public Map<FieldName, ?> readParameters(Evaluator evaluator) throws IOException {
 		Map<FieldName, Object> parameters = new LinkedHashMap<FieldName, Object>();
 
+		List<FieldName> activeFields = evaluator.getActiveFields();
+		System.out.println("Model input " + activeFields.size() + " parameter(s):");
+
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
 		try {
-			List<FieldName> names = evaluator.getActiveFields();
-			System.out.println("Model input " + names.size() + " parameter(s):");
+			int line = 1;
 
-			for(int i = 0; i < names.size(); i++){
-				FieldName name = names.get(i);
+			for(FieldName activeField : activeFields){
+				DataField dataField = evaluator.getDataField(activeField);
 
-				DataField dataField = evaluator.getDataField(name);
-				System.out.print("#" + (i + 1) + " (displayName=" + dataField.getDisplayName() + ", dataType=" + dataField.getDataType()+ "): ");
+				String displayName = dataField.getDisplayName();
+				if(displayName == null){
+					displayName = activeField.getValue();
+				}
+
+				DataType dataType = dataField.getDataType();
+
+				System.out.print(line + ") displayName=" + displayName + ", dataType=" + dataType+ ": ");
 
 				String input = reader.readLine();
 				if(input == null){
 					throw new EOFException();
 				}
 
-				parameters.put(name, ParameterUtil.parse(dataField, input));
+				parameters.put(activeField, evaluator.prepare(activeField, input));
+
+				line++;
 			}
 		} finally {
 			reader.close();

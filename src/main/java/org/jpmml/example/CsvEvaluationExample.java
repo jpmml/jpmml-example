@@ -16,8 +16,8 @@ public class CsvEvaluationExample {
 	static
 	public void main(String[] args) throws Exception {
 
-		if(args.length < 2 || args.length > 3){
-			System.err.println("Usage: java " + CsvEvaluationExample.class.getName() + " <PMML file> <CSV input file> <CSV output file>?");
+		if(args.length < 1 || args.length > 3){
+			System.err.println("Usage: java " + CsvEvaluationExample.class.getName() + " <PMML file> <CSV input file>? <CSV output file>?");
 
 			System.exit(-1);
 		}
@@ -26,116 +26,103 @@ public class CsvEvaluationExample {
 
 		PMML pmml = IOUtil.unmarshal(pmmlFile);
 
-		File inputFile = new File(args[1]);
+		File inputFile = (args.length > 1 ? new File(args[1]) : null);
 		File outputFile = (args.length > 2 ? new File(args[2]) : null);
 
 		evaluate(pmml, inputFile, outputFile);
 	}
 
+	@SuppressWarnings (
+		value = {"unused"}
+	)
 	static
 	private void evaluate(PMML pmml, File inputFile, File outputFile) throws Exception {
 		PMMLManager pmmlManager = new PMMLManager(pmml);
 
 		Evaluator evaluator = (Evaluator)pmmlManager.getModelManager(null, ModelEvaluatorFactory.getInstance());
 
-		List<String> lines = new ArrayList<String>();
+		List<FieldName> activeFields = evaluator.getActiveFields();
+		List<FieldName> predictedFields = evaluator.getPredictedFields();
+		List<FieldName> outputFields = evaluator.getOutputFields();
 
-		BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+		CsvUtil.Table table = CsvUtil.readTable(inputFile);
 
-		try {
-			String headerLine = reader.readLine();
-			if(headerLine == null){
-				return;
-			}
+		List<FieldName> inputFields = new ArrayList<FieldName>();
 
-			String separator = getSeparator(headerLine);
+		header:
+		{
+			List<String> headerRow = table.get(0);
 
-			lines.add(headerLine + separator + "JPMML");
+			for(int i = 0; i < headerRow.size(); i++){
+				String headerCell = headerRow.get(i);
 
-			List<String> header = CsvUtil.parseLine(headerLine, separator);
+				FieldName inputField = new FieldName(headerCell);
 
-			Map<FieldName, DataField> dataFields = new LinkedHashMap<FieldName, DataField>();
+				// Check that the column is present in PMML data dictionary
+				DataField dataField = evaluator.getDataField(inputField);
+				if(dataField != null){
 
-			header:
-			for(int i = 0; i < header.size(); i++){
-				FieldName name = new FieldName(header.get(i));
+					if(!activeFields.contains(inputField)){
+						System.err.println("Not an active field: " + inputField.getValue());
 
-				DataField dataField = evaluator.getDataField(name);
-				if(dataField == null){
-					System.err.println("Ignoring column: " + name.getValue());
-
-					continue header;
-				}
-
-				dataFields.put(name, dataField);
-			}
-
-			while(true){
-				String bodyLine = reader.readLine();
-				if(bodyLine == null){
-					break;
-				}
-
-				List<String> body = CsvUtil.parseLine(bodyLine, separator);
-
-				Map<FieldName, Object> parameters = new LinkedHashMap<FieldName, Object>();
-
-				body:
-				for(int i = 0; i < header.size(); i++){
-					FieldName name = new FieldName(header.get(i));
-
-					DataField dataField = dataFields.get(name);
-					if(dataField == null){
-						continue body;
+						if(predictedFields.contains(inputField) || outputFields.contains(inputField)){
+							inputField = null;
+						}
 					}
+				} else
 
-					String value = body.get(i);
-					if(CsvUtil.isMissing(value)){
-						continue body;
-					}
-
-					parameters.put(name, ParameterUtil.parse(dataField, value));
+				{
+					inputField = null;
 				}
 
-				Object result = evaluator.evaluate(parameters);
-
-				System.out.println("Model output: " + result);
-
-				lines.add(bodyLine + separator + result);
-			}
-		} finally {
-			reader.close();
-		}
-
-		if(outputFile == null){
-			return;
-		}
-
-		BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
-
-		try {
-
-			for(String line : lines){
-				writer.write(line + "\n");
+				inputFields.add(inputField);
 			}
 
-			writer.flush();
-		} finally {
-			writer.close();
-		}
-	}
+			for(FieldName predictedField : predictedFields){
+				headerRow.add(predictedField.getValue());
+			}
 
-	static
-	private String getSeparator(String line){
-
-		if((line.split(";")).length > 1){
-			return ";";
-		} else
-
-		if((line.split(",")).length > 1){
-			return ",";
+			for(FieldName outputField : outputFields){
+				headerRow.add(outputField.getValue());
+			}
 		}
 
-		return ";";
+		body:
+		for(int line = 1; line < table.size(); line++){
+			List<String> bodyRow = table.get(line);
+
+			Map<FieldName, Object> parameters = new LinkedHashMap<FieldName, Object>();
+
+			for(int i = 0; i < inputFields.size(); i++){
+				String bodyCell = bodyRow.get(i);
+
+				if(CsvUtil.isMissing(bodyCell)){
+					bodyCell = null;
+				}
+
+				FieldName inputField = inputFields.get(i);
+				if(inputField == null){
+					continue;
+				}
+
+				parameters.put(inputField, evaluator.prepare(inputField, bodyCell));
+			}
+
+			Map<FieldName, ?> result = evaluator.evaluate(parameters);
+
+			for(FieldName predictedField : predictedFields){
+				Object predictedValue = EvaluatorUtil.decode(result.get(predictedField));
+
+				bodyRow.add(String.valueOf(predictedValue));
+			}
+
+			for(FieldName outputField : outputFields){
+				Object outputValue = EvaluatorUtil.decode(result.get(outputField));
+
+				bodyRow.add(String.valueOf(outputValue));
+			}
+		}
+
+		CsvUtil.writeTable(table, outputFile);
 	}
 }
