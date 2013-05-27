@@ -59,6 +59,7 @@ public class SimplifyOutputExample {
 			switch(resultFeature){
 				case PREDICTED_VALUE:
 				case TRANSFORMED_VALUE:
+				case PROBABILITY:
 					break;
 				default:
 					it.remove();
