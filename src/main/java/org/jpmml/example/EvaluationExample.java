@@ -11,7 +11,7 @@ import org.jpmml.manager.*;
 
 import org.dmg.pmml.*;
 
-import com.beust.jcommander.Parameter;;
+import com.beust.jcommander.Parameter;
 
 public class EvaluationExample extends Example {
 
