@@ -11,32 +11,42 @@ import org.jpmml.manager.*;
 
 import org.dmg.pmml.*;
 
-public class CsvEvaluationExample {
+import com.beust.jcommander.Parameter;
+
+public class CsvEvaluationExample extends Example {
+
+	@Parameter (
+		names = {"--model"},
+		description = "The PMML file",
+		required = true
+	)
+	private File model = null;
+
+	@Parameter (
+		names = {"--csv-input"},
+		description = "Input CSV file. If missing, data records will be read from System.in"
+	)
+	private File csvInput = null;
+
+	@Parameter (
+		names = {"--csv-output"},
+		description = "Output CSV file. If missing, data records will be written to System.out"
+	)
+	private File csvOutput = null;
+
 
 	static
-	public void main(String[] args) throws Exception {
-
-		if(args.length < 1 || args.length > 3){
-			System.err.println("Usage: java " + CsvEvaluationExample.class.getName() + " <PMML file> <CSV input file>? <CSV output file>?");
-
-			System.exit(-1);
-		}
-
-		File pmmlFile = new File(args[0]);
-
-		PMML pmml = IOUtil.unmarshal(pmmlFile);
-
-		File inputFile = (args.length > 1 ? new File(args[1]) : null);
-		File outputFile = (args.length > 2 ? new File(args[2]) : null);
-
-		evaluate(pmml, inputFile, outputFile);
+	public void main(String... args) throws Exception {
+		execute(CsvEvaluationExample.class, args);
 	}
 
+	@Override
 	@SuppressWarnings (
 		value = {"unused"}
 	)
-	static
-	private void evaluate(PMML pmml, File inputFile, File outputFile) throws Exception {
+	public void execute() throws Exception {
+		PMML pmml = IOUtil.unmarshal(this.model);
+
 		PMMLManager pmmlManager = new PMMLManager(pmml);
 
 		Evaluator evaluator = (Evaluator)pmmlManager.getModelManager(null, ModelEvaluatorFactory.getInstance());
@@ -45,7 +55,7 @@ public class CsvEvaluationExample {
 		List<FieldName> predictedFields = evaluator.getPredictedFields();
 		List<FieldName> outputFields = evaluator.getOutputFields();
 
-		CsvUtil.Table table = CsvUtil.readTable(inputFile);
+		CsvUtil.Table table = CsvUtil.readTable(this.csvInput);
 
 		List<FieldName> inputFields = new ArrayList<FieldName>();
 
@@ -123,6 +133,6 @@ public class CsvEvaluationExample {
 			}
 		}
 
-		CsvUtil.writeTable(table, outputFile);
+		CsvUtil.writeTable(table, this.csvOutput);
 	}
 }

@@ -11,26 +11,27 @@ import org.jpmml.manager.*;
 
 import org.dmg.pmml.*;
 
-public class EvaluationExample {
+import com.beust.jcommander.Parameter;;
+
+public class EvaluationExample extends Example {
+
+	@Parameter (
+		names = {"--model"},
+		description = "The PMML file",
+		required = true
+	)
+	private File model = null;
+
 
 	static
 	public void main(String... args) throws Exception {
-
-		if(args.length != 1){
-			System.err.println("Usage: java " + EvaluationExample.class.getName() + " <PMML file>");
-
-			System.exit(-1);
-		}
-
-		File pmmlFile = new File(args[0]);
-
-		PMML pmml = IOUtil.unmarshal(pmmlFile);
-
-		evaluate(pmml);
+		execute(EvaluationExample.class, args);
 	}
 
-	static
-	public void evaluate(PMML pmml) throws Exception {
+	@Override
+	public void execute() throws Exception {
+		PMML pmml = IOUtil.unmarshal(this.model);
+
 		PMMLManager pmmlManager = new PMMLManager(pmml);
 
 		// Load the default model

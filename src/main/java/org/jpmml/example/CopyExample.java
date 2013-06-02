@@ -7,26 +7,36 @@ import java.io.*;
 
 import org.jpmml.manager.*;
 
-public class CopyExample {
+import org.dmg.pmml.*;
+
+import com.beust.jcommander.Parameter;
+
+public class CopyExample extends Example {
+
+	@Parameter (
+		names = {"--input"},
+		description = "Input PMML file",
+		required = true
+	)
+	private File input = null;
+
+	@Parameter (
+		names = {"--output"},
+		description = "Output PMML file",
+		required = true
+	)
+	private File output = null;
+
 
 	static
 	public void main(String... args) throws Exception {
-
-		if(args.length != 2){
-			System.err.println("Usage: java " + CopyExample.class.getName() + " <Source file> <Destination file>");
-
-			System.exit(-1);
-		}
-
-		File srcFile = new File(args[0]);
-		File destFile = new File(args[1]);
-
-		copyPmml(srcFile, destFile);
+		execute(CopyExample.class, args);
 	}
 
-	static
-	public void copyPmml(File srcFile, File destFile) throws Exception {
-		IOUtil.marshal(IOUtil.unmarshal(srcFile), destFile);
-	}
+	@Override
+	public void execute() throws Exception {
+		PMML pmml = IOUtil.unmarshal(this.input);
 
+		IOUtil.marshal(pmml, this.output);
+	}
 }

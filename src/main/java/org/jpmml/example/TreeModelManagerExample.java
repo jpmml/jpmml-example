@@ -3,7 +3,6 @@
  */
 package org.jpmml.example;
 
-import java.math.*;
 import java.util.*;
 
 import org.jpmml.evaluator.*;
@@ -11,17 +10,18 @@ import org.jpmml.manager.*;
 
 import org.dmg.pmml.*;
 
-public class TreeModelManagerExample {
+public class TreeModelManagerExample extends Example {
 
 	static
 	public void main(String... args) throws Exception {
+		execute(TreeModelManagerExample.class, args);
+	}
+
+	@Override
+	public void execute() throws Exception {
 		TreeModelEvaluator treeModelManager = createGolfingModel();
 
-		Map<FieldName, Object> parameters = new HashMap<FieldName, Object>();
-		parameters.put(new FieldName("temperature"), new BigDecimal("75"));
-		parameters.put(new FieldName("humidity"), new BigDecimal("55"));
-		parameters.put(new FieldName("windy"), "false");
-		parameters.put(new FieldName("outlook"), "overcast");
+		Map<FieldName, ?> parameters = EvaluationExample.readParameters(treeModelManager);
 
 		Node node = treeModelManager.evaluateTree(new ModelManagerEvaluationContext(treeModelManager, parameters));
 

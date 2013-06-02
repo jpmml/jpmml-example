@@ -11,25 +11,37 @@ import org.jpmml.manager.*;
 
 import org.dmg.pmml.*;
 
-public class SimplifyOutputExample {
+import com.beust.jcommander.Parameter;
+
+public class SimplifyOutputExample extends Example {
+
+	@Parameter (
+		names = {"--input"},
+		description = "Input PMML file",
+		required = true
+	)
+	private File input = null;
+
+	@Parameter (
+		names = {"--output"},
+		description = "Output PMML file",
+		required = true
+	)
+	private File output = null;
+
 
 	static
 	public void main(String... args) throws Exception {
+		execute(SimplifyOutputExample.class, args);
+	}
 
-		if(args.length != 2){
-			System.err.println("Usage: java " + SimplifyOutputExample.class.getName() + " <Source file> <Destination file>");
-
-			System.exit(-1);
-		}
-
-		File srcFile = new File(args[0]);
-		File destFile = new File(args[1]);
-
-		PMML pmml = IOUtil.unmarshal(srcFile);
+	@Override
+	public void execute() throws Exception {
+		PMML pmml = IOUtil.unmarshal(this.input);
 
 		simplify(pmml);
 
-		IOUtil.marshal(pmml, destFile);
+		IOUtil.marshal(pmml, this.output);
 	}
 
 	static

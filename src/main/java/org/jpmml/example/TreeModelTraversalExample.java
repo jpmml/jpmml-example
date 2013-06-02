@@ -10,26 +10,27 @@ import org.jpmml.manager.*;
 
 import org.dmg.pmml.*;
 
-public class TreeModelTraversalExample {
+import com.beust.jcommander.Parameter;
+
+public class TreeModelTraversalExample extends Example {
+
+	@Parameter (
+		names = "--model",
+		description = "The PMML file with a Decision tree model",
+		required = true
+	)
+	private File model = null;
+
 
 	static
 	public void main(String... args) throws Exception {
-
-		if(args.length != 1){
-			System.out.println("Usage: java " + TreeModelTraversalExample.class + " <PMML file>");
-
-			System.exit(-1);
-		}
-
-		File pmmlFile = new File(args[0]);
-
-		PMML pmml = IOUtil.unmarshal(pmmlFile);
-
-		traverse(pmml);
+		execute(TreeModelTraversalExample.class, args);
 	}
 
-	static
-	private void traverse(PMML pmml){
+	@Override
+	public void execute() throws Exception {
+		PMML pmml = IOUtil.unmarshal(this.model);
+
 		TreeModelManager treeModelManager = new TreeModelManager(pmml);
 
 		format(treeModelManager.getOrCreateRoot(), "");
