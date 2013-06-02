@@ -12,7 +12,7 @@ import org.dmg.pmml.*;
 
 import com.beust.jcommander.Parameter;
 
-public class TreeModelTraversalExample extends Example {
+public class TreeModelTranslationExample extends Example {
 
 	@Parameter (
 		names = "--model",
@@ -24,7 +24,7 @@ public class TreeModelTraversalExample extends Example {
 
 	static
 	public void main(String... args) throws Exception {
-		execute(TreeModelTraversalExample.class, args);
+		execute(TreeModelTranslationExample.class, args);
 	}
 
 	@Override

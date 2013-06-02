@@ -12,7 +12,7 @@ import org.dmg.pmml.*;
 
 import com.beust.jcommander.Parameter;
 
-public class RandomForestTraversalExample extends Example {
+public class RandomForestTranslationExample extends Example {
 
 	@Parameter (
 		names = {"--model"},
@@ -24,7 +24,7 @@ public class RandomForestTraversalExample extends Example {
 
 	static
 	public void main(String... args) throws Exception {
-		execute(RandomForestTraversalExample.class, args);
+		execute(RandomForestTranslationExample.class, args);
 	}
 
 	@Override
@@ -39,7 +39,7 @@ public class RandomForestTraversalExample extends Example {
 
 			System.out.println("String segment_" + segment.getId() + "(){");
 
-			TreeModelTraversalExample.format(treeModelManager.getOrCreateRoot(), "\t");
+			TreeModelTranslationExample.format(treeModelManager.getOrCreateRoot(), "\t");
 
 			System.out.println("}");
 		}
