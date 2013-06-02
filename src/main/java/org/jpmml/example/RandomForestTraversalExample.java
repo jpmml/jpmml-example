@@ -30,9 +30,9 @@ public class RandomForestTraversalExample {
 
 	static
 	private void traverse(PMML pmml){
-		RandomForestManager randomForestModelManager = new RandomForestManager(pmml);
+		MiningModelManager miningModelManager = new MiningModelManager(pmml);
 
-		List<Segment> segments = randomForestModelManager.getSegments();
+		List<Segment> segments = miningModelManager.getSegments();
 		for(Segment segment : segments){
 			TreeModelManager treeModelManager = new TreeModelManager(pmml, (TreeModel)segment.getModel());
 
