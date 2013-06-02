@@ -34,6 +34,12 @@ public class CsvEvaluationExample extends Example {
 	)
 	private File csvOutput = null;
 
+	@Parameter (
+		names = {"--separator"},
+		description = "CSV cell separator character"
+	)
+	private String separator = ";";
+
 
 	static
 	public void main(String... args) throws Exception {
@@ -55,7 +61,7 @@ public class CsvEvaluationExample extends Example {
 		List<FieldName> predictedFields = evaluator.getPredictedFields();
 		List<FieldName> outputFields = evaluator.getOutputFields();
 
-		CsvUtil.Table table = CsvUtil.readTable(this.csvInput);
+		CsvUtil.Table table = CsvUtil.readTable(this.csvInput, this.separator);
 
 		List<FieldName> inputFields = new ArrayList<FieldName>();
 

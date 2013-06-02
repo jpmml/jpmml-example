@@ -13,13 +13,16 @@ public class CsvUtil {
 
 	static
 	public Table readTable(File file) throws IOException {
+		return readTable(file, null);
+	}
+
+	static
+	public Table readTable(File file, String separator) throws IOException {
 		Table table = new Table();
 
 		BufferedReader reader = new BufferedReader(file != null ? new FileReader(file) : new InputStreamReader(System.in));
 
 		try {
-			String separator = null;
-
 			while(true){
 				String line = reader.readLine();
 				if(line == null){
@@ -28,8 +31,6 @@ public class CsvUtil {
 
 				if(separator == null){
 					separator = getSeparator(line);
-
-					table.setSeparator(separator);
 				}
 
 				table.add(CsvUtil.parseLine(line, separator));
@@ -37,6 +38,8 @@ public class CsvUtil {
 		} finally {
 			reader.close();
 		}
+
+		table.setSeparator(separator);
 
 		return table;
 	}
