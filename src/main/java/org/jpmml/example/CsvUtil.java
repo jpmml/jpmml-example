@@ -86,7 +86,7 @@ public class CsvUtil {
 			return ",";
 		}
 
-		return ";";
+		throw new RuntimeException();
 	}
 
 	static

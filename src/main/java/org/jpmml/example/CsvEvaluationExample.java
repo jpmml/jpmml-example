@@ -38,7 +38,7 @@ public class CsvEvaluationExample extends Example {
 		names = {"--separator"},
 		description = "CSV cell separator character"
 	)
-	private String separator = ";";
+	private String separator = null;
 
 
 	static
