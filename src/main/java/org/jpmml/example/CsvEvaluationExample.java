@@ -55,7 +55,9 @@ public class CsvEvaluationExample extends Example {
 
 		PMMLManager pmmlManager = new PMMLManager(pmml);
 
-		Evaluator evaluator = (Evaluator)pmmlManager.getModelManager(null, ModelEvaluatorFactory.getInstance());
+		ModelManager<?> modelManager = pmmlManager.getModelManager(null, ModelEvaluatorFactory.getInstance());
+
+		Evaluator evaluator = (Evaluator)modelManager;
 
 		List<FieldName> activeFields = evaluator.getActiveFields();
 		List<FieldName> predictedFields = evaluator.getPredictedFields();
@@ -63,7 +65,57 @@ public class CsvEvaluationExample extends Example {
 
 		CsvUtil.Table table = CsvUtil.readTable(this.input, this.separator);
 
+		List<Map<FieldName, Object>> rows = prepare(table, evaluator);
+
+		header:
+		{
+			List<String> headerRow = table.get(0);
+
+			for(FieldName predictedField : predictedFields){
+				headerRow.add(predictedField.getValue());
+			}
+
+			for(FieldName outputField : outputFields){
+				headerRow.add(outputField.getValue());
+			}
+		}
+
+		body:
+		for(int line = 1; line < table.size(); line++){
+			List<String> bodyRow = table.get(line);
+
+			Map<FieldName, ?> parameters = rows.get(line - 1);
+
+			Map<FieldName, ?> result = evaluator.evaluate(parameters);
+
+			for(FieldName predictedField : predictedFields){
+				Object predictedValue = EvaluatorUtil.decode(result.get(predictedField));
+
+				bodyRow.add(String.valueOf(predictedValue));
+			}
+
+			for(FieldName outputField : outputFields){
+				Object outputValue = EvaluatorUtil.decode(result.get(outputField));
+
+				bodyRow.add(String.valueOf(outputValue));
+			}
+		}
+
+		CsvUtil.writeTable(table, this.output);
+	}
+
+	@SuppressWarnings (
+		value = {"unused"}
+	)
+	static
+	private List<Map<FieldName, Object>> prepare(List<List<String>> table, Evaluator evaluator){
+		List<Map<FieldName, Object>> result = new ArrayList<Map<FieldName, Object>>();
+
 		List<FieldName> inputFields = new ArrayList<FieldName>();
+
+		List<FieldName> activeFields = evaluator.getActiveFields();
+		List<FieldName> predictedFields = evaluator.getPredictedFields();
+		List<FieldName> outputFields = evaluator.getOutputFields();
 
 		header:
 		{
@@ -93,14 +145,6 @@ public class CsvEvaluationExample extends Example {
 
 				inputFields.add(inputField);
 			}
-
-			for(FieldName predictedField : predictedFields){
-				headerRow.add(predictedField.getValue());
-			}
-
-			for(FieldName outputField : outputFields){
-				headerRow.add(outputField.getValue());
-			}
 		}
 
 		body:
@@ -112,33 +156,21 @@ public class CsvEvaluationExample extends Example {
 			for(int i = 0; i < inputFields.size(); i++){
 				String bodyCell = bodyRow.get(i);
 
-				if(CsvUtil.isMissing(bodyCell)){
-					bodyCell = null;
-				}
-
 				FieldName inputField = inputFields.get(i);
 				if(inputField == null){
 					continue;
 				}
 
+				if(CsvUtil.isMissing(bodyCell)){
+					bodyCell = null;
+				}
+
 				parameters.put(inputField, evaluator.prepare(inputField, bodyCell));
 			}
 
-			Map<FieldName, ?> result = evaluator.evaluate(parameters);
-
-			for(FieldName predictedField : predictedFields){
-				Object predictedValue = EvaluatorUtil.decode(result.get(predictedField));
-
-				bodyRow.add(String.valueOf(predictedValue));
-			}
-
-			for(FieldName outputField : outputFields){
-				Object outputValue = EvaluatorUtil.decode(result.get(outputField));
-
-				bodyRow.add(String.valueOf(outputValue));
-			}
+			result.add(parameters);
 		}
 
-		CsvUtil.writeTable(table, this.output);
+		return result;
 	}
 }
