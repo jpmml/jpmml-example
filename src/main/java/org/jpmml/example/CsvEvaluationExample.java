@@ -80,6 +80,8 @@ public class CsvEvaluationExample extends Example {
 			}
 		}
 
+		long start = System.currentTimeMillis();
+
 		body:
 		for(int line = 1; line < table.size(); line++){
 			List<String> bodyRow = table.get(line);
@@ -100,6 +102,10 @@ public class CsvEvaluationExample extends Example {
 				bodyRow.add(String.valueOf(outputValue));
 			}
 		}
+
+		long end = System.currentTimeMillis();
+
+		System.err.println("Evaluation completed in " + (end - start) + " ms.");
 
 		CsvUtil.writeTable(table, this.output);
 	}
