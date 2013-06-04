@@ -23,16 +23,16 @@ public class CsvEvaluationExample extends Example {
 	private File model = null;
 
 	@Parameter (
-		names = {"--csv-input"},
+		names = {"--input"},
 		description = "Input CSV file. If missing, data records will be read from System.in"
 	)
-	private File csvInput = null;
+	private File input = null;
 
 	@Parameter (
-		names = {"--csv-output"},
+		names = {"--output"},
 		description = "Output CSV file. If missing, data records will be written to System.out"
 	)
-	private File csvOutput = null;
+	private File output = null;
 
 	@Parameter (
 		names = {"--separator"},
@@ -61,7 +61,7 @@ public class CsvEvaluationExample extends Example {
 		List<FieldName> predictedFields = evaluator.getPredictedFields();
 		List<FieldName> outputFields = evaluator.getOutputFields();
 
-		CsvUtil.Table table = CsvUtil.readTable(this.csvInput, this.separator);
+		CsvUtil.Table table = CsvUtil.readTable(this.input, this.separator);
 
 		List<FieldName> inputFields = new ArrayList<FieldName>();
 
@@ -139,6 +139,6 @@ public class CsvEvaluationExample extends Example {
 			}
 		}
 
-		CsvUtil.writeTable(table, this.csvOutput);
+		CsvUtil.writeTable(table, this.output);
 	}
 }
