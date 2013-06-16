@@ -5,8 +5,6 @@ package org.jpmml.example;
 
 import java.io.*;
 
-import org.jpmml.manager.*;
-
 import org.dmg.pmml.*;
 
 import com.beust.jcommander.Parameter;
