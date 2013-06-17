@@ -43,7 +43,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<outputFile>${project.build.directory}/${project.artifactId}-toolkit-${project.version}.jar</outputFile>
+					<finalName>jpmml-example-${project.version}</finalName>
 				</configuration>
 			</plugin>
 		</plugins>
