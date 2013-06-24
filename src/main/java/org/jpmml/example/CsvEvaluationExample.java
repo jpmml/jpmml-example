@@ -40,6 +40,12 @@ public class CsvEvaluationExample extends Example {
 	)
 	private String separator = null;
 
+	@Parameter (
+		names = {"--count"},
+		description = "Number of repetitions"
+	)
+	private int count = 1;
+
 
 	static
 	public void main(String... args) throws Exception {
@@ -83,23 +89,26 @@ public class CsvEvaluationExample extends Example {
 		long start = System.currentTimeMillis();
 
 		body:
-		for(int line = 1; line < table.size(); line++){
-			List<String> bodyRow = table.get(line);
+		for(int i = 0; i < this.count; i++){
 
-			Map<FieldName, ?> parameters = rows.get(line - 1);
+			for(int line = 1; line < table.size(); line++){
+				List<String> bodyRow = table.get(line);
 
-			Map<FieldName, ?> result = evaluator.evaluate(parameters);
+				Map<FieldName, ?> parameters = rows.get(line - 1);
 
-			for(FieldName predictedField : predictedFields){
-				Object predictedValue = EvaluatorUtil.decode(result.get(predictedField));
+				Map<FieldName, ?> result = evaluator.evaluate(parameters);
 
-				bodyRow.add(String.valueOf(predictedValue));
-			}
+				for(FieldName predictedField : predictedFields){
+					Object predictedValue = EvaluatorUtil.decode(result.get(predictedField));
 
-			for(FieldName outputField : outputFields){
-				Object outputValue = EvaluatorUtil.decode(result.get(outputField));
+					bodyRow.add(String.valueOf(predictedValue));
+				}
 
-				bodyRow.add(String.valueOf(outputValue));
+				for(FieldName outputField : outputFields){
+					Object outputValue = EvaluatorUtil.decode(result.get(outputField));
+
+					bodyRow.add(String.valueOf(outputValue));
+				}
 			}
 		}
 
