@@ -33,7 +33,7 @@ public class TreeModelTranslationExample extends Example {
 
 		TreeModelManager treeModelManager = new TreeModelManager(pmml);
 
-		format(treeModelManager.getOrCreateRoot(), "");
+		format(treeModelManager.getRoot(), "");
 	}
 
 	static

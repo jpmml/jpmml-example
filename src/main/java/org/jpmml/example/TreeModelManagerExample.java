@@ -19,18 +19,19 @@ public class TreeModelManagerExample extends Example {
 
 	@Override
 	public void execute() throws Exception {
-		TreeModelEvaluator treeModelManager = createGolfingModel();
+		PMML pmml = createGolfingModel();
 
-		Map<FieldName, ?> parameters = EvaluationExample.readParameters(treeModelManager);
+		TreeModelEvaluator treeModelEvaluator = new TreeModelEvaluator(pmml);
 
-		Node node = treeModelManager.evaluateTree(new ModelManagerEvaluationContext(treeModelManager, parameters));
+		Map<FieldName, ?> parameters = EvaluationExample.readParameters(treeModelEvaluator);
 
-		System.out.println("Node id: " + node.getId());
-		System.out.println("Node score: " + node.getScore());
+		Map<FieldName, ?> result = treeModelEvaluator.evaluate(parameters);
+
+		System.out.println(result.get(treeModelEvaluator.getTarget()));
 	}
 
 	static
-	private TreeModelEvaluator createGolfingModel(){
+	private PMML createGolfingModel(){
 		TreeModelManager treeModelManager = new TreeModelManager();
 
 		TreeModel treeModel = treeModelManager.createClassificationModel();
@@ -46,32 +47,21 @@ public class TreeModelManagerExample extends Example {
 		treeModelManager.addField(windy, null, OpType.CATEGORICAL, DataType.STRING, null);
 
 		DataField windyData = treeModelManager.getDataField(windy);
-
-		List<Value> windyDataValues = windyData.getValues();
-		windyDataValues.add(new Value("true"));
-		windyDataValues.add(new Value("false"));
+		(windyData.getValues()).addAll(createValues("true", "false"));
 
 		FieldName outlook = new FieldName("outlook");
 		treeModelManager.addField(outlook, null, OpType.CATEGORICAL, DataType.STRING, null);
 
 		DataField outlookData = treeModelManager.getDataField(outlook);
-
-		List<Value> outlookDataValues = outlookData.getValues();
-		outlookDataValues.add(new Value("sunny"));
-		outlookDataValues.add(new Value("overcast"));
-		outlookDataValues.add(new Value("rain"));
+		(outlookData.getValues()).addAll(createValues("sunny", "overcast", "rain"));
 
 		FieldName whatIdo = new FieldName("whatIdo");
 		treeModelManager.addField(whatIdo, null, OpType.CATEGORICAL, DataType.STRING, FieldUsageType.PREDICTED);
 
 		DataField whatIdoData = treeModelManager.getDataField(whatIdo);
+		(whatIdoData.getValues()).addAll(createValues("will play", "may play", "no play"));
 
-		List<Value> whatIdoDataValues = whatIdoData.getValues();
-		whatIdoDataValues.add(new Value("will play"));
-		whatIdoDataValues.add(new Value("may play"));
-		whatIdoDataValues.add(new Value("no play"));
-
-		Node n1 = treeModelManager.getOrCreateRoot();
+		Node n1 = treeModelManager.getRoot();
 		n1.setId("1");
 		n1.setScore("will play");
 
@@ -81,8 +71,7 @@ public class TreeModelManagerExample extends Example {
 
 		Predicate n2Predicate = createSimplePredicate(outlook, SimplePredicate.Operator.EQUAL, "sunny");
 
-		Node n2 = treeModelManager.addNode(n1, n2Predicate);
-		n2.setId("2");
+		Node n2 = treeModelManager.addNode(n1, "2", n2Predicate);
 		n2.setScore("will play");
 
 		Predicate n3Predicate = createCompoundPredicate(CompoundPredicate.BooleanOperator.SURROGATE,
@@ -90,20 +79,17 @@ public class TreeModelManagerExample extends Example {
 			createSimplePredicate(temperature, SimplePredicate.Operator.GREATER_THAN, "50")
 		);
 
-		Node n3 = treeModelManager.addNode(n2, n3Predicate);
-		n3.setId("3");
+		Node n3 = treeModelManager.addNode(n2, "3", n3Predicate);
 		n3.setScore("will play");
 
 		Predicate n4Predicate = createSimplePredicate(humidity, SimplePredicate.Operator.LESS_THAN, "80");
 
-		Node n4 = treeModelManager.addNode(n3, n4Predicate);
-		n4.setId("4");
+		Node n4 = treeModelManager.addNode(n3, "4", n4Predicate);
 		n4.setScore("will play");
 
 		Predicate n5Predicate = createSimplePredicate(humidity, SimplePredicate.Operator.GREATER_OR_EQUAL, "80");
 
-		Node n5 = treeModelManager.addNode(n3, n5Predicate);
-		n5.setId("5");
+		Node n5 = treeModelManager.addNode(n3, "5", n5Predicate);
 		n5.setScore("no play");
 
 		Predicate n6Predicate = createCompoundPredicate(CompoundPredicate.BooleanOperator.OR,
@@ -111,8 +97,7 @@ public class TreeModelManagerExample extends Example {
 			createSimplePredicate(temperature, SimplePredicate.Operator.LESS_OR_EQUAL, "50")
 		);
 
-		Node n6 = treeModelManager.addNode(n2, n6Predicate);
-		n6.setId("6");
+		Node n6 = treeModelManager.addNode(n2, "6", n6Predicate);
 		n6.setScore("no play");
 
 		//
@@ -124,8 +109,7 @@ public class TreeModelManagerExample extends Example {
 			createSimplePredicate(outlook, SimplePredicate.Operator.EQUAL, "rain")
 		);
 
-		Node n7 = treeModelManager.addNode(n1, n7Predicate);
-		n7.setId("7");
+		Node n7 = treeModelManager.addNode(n1, "7", n7Predicate);
 		n7.setScore("may play");
 
 		Predicate n8Predicate = createCompoundPredicate(CompoundPredicate.BooleanOperator.AND,
@@ -136,8 +120,7 @@ public class TreeModelManagerExample extends Example {
 			createSimplePredicate(windy, SimplePredicate.Operator.EQUAL, "false")
 		);
 
-		Node n8 = treeModelManager.addNode(n7, n8Predicate);
-		n8.setId("8");
+		Node n8 = treeModelManager.addNode(n7, "8", n8Predicate);
 		n8.setScore("may play");
 
 		Predicate n9Predicate = createCompoundPredicate(CompoundPredicate.BooleanOperator.AND,
@@ -145,11 +128,21 @@ public class TreeModelManagerExample extends Example {
 			createSimplePredicate(humidity, SimplePredicate.Operator.LESS_THAN, "70")
 		);
 
-		Node n9 = treeModelManager.addNode(n7, n9Predicate);
-		n9.setId("9");
+		Node n9 = treeModelManager.addNode(n7, "9", n9Predicate);
 		n9.setScore("no play");
 
-		return new TreeModelEvaluator(treeModelManager);
+		return treeModelManager.getPmml();
+	}
+
+	static
+	private List<Value> createValues(String... strings){
+		List<Value> values = new ArrayList<Value>();
+
+		for(String string : strings){
+			values.add(new Value(string));
+		}
+
+		return values;
 	}
 
 	static
