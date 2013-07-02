@@ -94,9 +94,9 @@ public class CsvEvaluationExample extends Example {
 			for(int line = 1; line < table.size(); line++){
 				List<String> bodyRow = table.get(line);
 
-				Map<FieldName, ?> parameters = rows.get(line - 1);
+				Map<FieldName, ?> arguments = rows.get(line - 1);
 
-				Map<FieldName, ?> result = evaluator.evaluate(parameters);
+				Map<FieldName, ?> result = evaluator.evaluate(arguments);
 
 				for(FieldName predictedField : predictedFields){
 					Object predictedValue = EvaluatorUtil.decode(result.get(predictedField));
@@ -166,7 +166,7 @@ public class CsvEvaluationExample extends Example {
 		for(int line = 1; line < table.size(); line++){
 			List<String> bodyRow = table.get(line);
 
-			Map<FieldName, Object> parameters = new LinkedHashMap<FieldName, Object>();
+			Map<FieldName, Object> arguments = new LinkedHashMap<FieldName, Object>();
 
 			for(int i = 0; i < inputFields.size(); i++){
 				String bodyCell = bodyRow.get(i);
@@ -180,10 +180,10 @@ public class CsvEvaluationExample extends Example {
 					bodyCell = null;
 				}
 
-				parameters.put(inputField, evaluator.prepare(inputField, bodyCell));
+				arguments.put(inputField, evaluator.prepare(inputField, bodyCell));
 			}
 
-			result.add(parameters);
+			result.add(arguments);
 		}
 
 		return result;

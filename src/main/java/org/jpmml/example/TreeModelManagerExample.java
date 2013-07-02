@@ -23,11 +23,11 @@ public class TreeModelManagerExample extends Example {
 
 		TreeModelEvaluator treeModelEvaluator = new TreeModelEvaluator(pmml);
 
-		Map<FieldName, ?> parameters = EvaluationExample.readParameters(treeModelEvaluator);
+		Map<FieldName, ?> arguments = EvaluationExample.readArguments(treeModelEvaluator);
 
-		Map<FieldName, ?> result = treeModelEvaluator.evaluate(parameters);
+		Map<FieldName, ?> result = treeModelEvaluator.evaluate(arguments);
 
-		System.out.println(result.get(treeModelEvaluator.getTarget()));
+		EvaluationExample.writeResult(treeModelEvaluator, result);
 	}
 
 	static

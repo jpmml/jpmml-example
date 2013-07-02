@@ -37,22 +37,19 @@ public class EvaluationExample extends Example {
 		// Load the default model
 		Evaluator evaluator = (Evaluator)pmmlManager.getModelManager(null, ModelEvaluatorFactory.getInstance());
 
-		Map<FieldName, ?> parameters = readParameters(evaluator);
+		Map<FieldName, ?> arguments = readArguments(evaluator);
 
-		FieldName target = evaluator.getTarget();
+		Map<FieldName, ?> result = evaluator.evaluate(arguments);
 
-		Map<FieldName, ?> result = evaluator.evaluate(parameters);
-
-		Object targetValue = EvaluatorUtil.decode(result.get(target));
-		System.out.println("Model output: " + targetValue);
+		writeResult(evaluator, result);
 	}
 
 	static
-	public Map<FieldName, ?> readParameters(Evaluator evaluator) throws IOException {
-		Map<FieldName, Object> parameters = new LinkedHashMap<FieldName, Object>();
+	public Map<FieldName, ?> readArguments(Evaluator evaluator) throws IOException {
+		Map<FieldName, Object> arguments = new LinkedHashMap<FieldName, Object>();
 
 		List<FieldName> activeFields = evaluator.getActiveFields();
-		System.out.println("Model input " + activeFields.size() + " parameter(s):");
+		System.out.println("Reading " + activeFields.size() + " argument(s):");
 
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
@@ -62,21 +59,14 @@ public class EvaluationExample extends Example {
 			for(FieldName activeField : activeFields){
 				DataField dataField = evaluator.getDataField(activeField);
 
-				String displayName = dataField.getDisplayName();
-				if(displayName == null){
-					displayName = activeField.getValue();
-				}
-
-				DataType dataType = dataField.getDataType();
-
-				System.out.print(line + ") displayName=" + displayName + ", dataType=" + dataType+ ": ");
+				System.out.print(line + ") displayName=" + getDisplayName(dataField, activeField) + ", dataType=" + getDataType(dataField) + ": ");
 
 				String input = reader.readLine();
 				if(input == null){
 					throw new EOFException();
 				}
 
-				parameters.put(activeField, evaluator.prepare(activeField, input));
+				arguments.put(activeField, evaluator.prepare(activeField, input));
 
 				line++;
 			}
@@ -84,6 +74,52 @@ public class EvaluationExample extends Example {
 			reader.close();
 		}
 
-		return parameters;
+		return arguments;
+	}
+
+	static
+	public void writeResult(Evaluator evaluator, Map<FieldName, ?> result){
+		int line = 1;
+
+		System.out.println("Writing " + result.size() + " result(s):");
+
+		List<FieldName> predictedFields = evaluator.getPredictedFields();
+		for(FieldName predictedField : predictedFields){
+			DataField dataField = evaluator.getDataField(predictedField);
+
+			Object predictedValue = result.get(predictedField);
+
+			System.out.println(line + ") displayName=" + getDisplayName(dataField, predictedField) + ": " + EvaluatorUtil.decode(predictedValue));
+
+			line++;
+		}
+
+		List<FieldName> resultFields = evaluator.getOutputFields();
+		for(FieldName resultField : resultFields){
+			OutputField outputField = evaluator.getOutputField(resultField);
+
+			Object outputValue = result.get(resultField);
+
+			System.out.println(line + ") displayName=" + getDisplayName(outputField, resultField) + ": " + outputValue);
+
+			line++;
+		}
+	}
+
+	static
+	private String getDisplayName(DictionaryField dictionaryField, FieldName fieldName){
+		String result = dictionaryField.getDisplayName();
+		if(result == null){
+			result = fieldName.getValue();
+		}
+
+		return result;
+	}
+
+	static
+	private String getDataType(DictionaryField dictionaryField){
+		DataType dataType = dictionaryField.getDataType();
+
+		return dataType.name();
 	}
 }
