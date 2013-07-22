@@ -69,13 +69,23 @@ public class CsvEvaluationExample extends Example {
 		List<FieldName> predictedFields = evaluator.getPredictedFields();
 		List<FieldName> outputFields = evaluator.getOutputFields();
 
-		CsvUtil.Table table = CsvUtil.readTable(this.input, this.separator);
+		CsvUtil.Table inputTable = CsvUtil.readTable(this.input, this.separator);
 
-		List<Map<FieldName, Object>> rows = prepare(table, evaluator);
+		List<Map<FieldName, Object>> rows = prepare(inputTable, evaluator);
+
+		CsvUtil.Table outputTable = new CsvUtil.Table();
+		outputTable.setSeparator(inputTable.getSeparator());
+
+		// Copy cells from input table to output table if they have the same structure
+		boolean copyInputCells = (rows.size() == (inputTable.size() - 1));
 
 		header:
 		{
-			List<String> headerRow = table.get(0);
+			List<String> headerRow = new ArrayList<String>();
+
+			if(copyInputCells){
+				headerRow.addAll(inputTable.get(0));
+			}
 
 			for(FieldName predictedField : predictedFields){
 				headerRow.add(predictedField.getValue());
@@ -84,6 +94,8 @@ public class CsvEvaluationExample extends Example {
 			for(FieldName outputField : outputFields){
 				headerRow.add(outputField.getValue());
 			}
+
+			outputTable.add(headerRow);
 		}
 
 		long start = System.currentTimeMillis();
@@ -91,10 +103,14 @@ public class CsvEvaluationExample extends Example {
 		body:
 		for(int i = 0; i < this.count; i++){
 
-			for(int line = 1; line < table.size(); line++){
-				List<String> bodyRow = table.get(line);
+			for(int line = 0; line < rows.size(); line++){
+				List<String> bodyRow = new ArrayList<String>();
 
-				Map<FieldName, ?> arguments = rows.get(line - 1);
+				if(copyInputCells){
+					bodyRow.addAll(inputTable.get(line + 1));
+				}
+
+				Map<FieldName, ?> arguments = rows.get(line);
 
 				Map<FieldName, ?> result = evaluator.evaluate(arguments);
 
@@ -109,6 +125,10 @@ public class CsvEvaluationExample extends Example {
 
 					bodyRow.add(String.valueOf(outputValue));
 				}
+
+				if(i == 0){
+					outputTable.add(bodyRow);
+				}
 			}
 		}
 
@@ -116,7 +136,7 @@ public class CsvEvaluationExample extends Example {
 
 		System.err.println("Evaluation completed in " + (end - start) + " ms.");
 
-		CsvUtil.writeTable(table, this.output);
+		CsvUtil.writeTable(outputTable, this.output);
 	}
 
 	@SuppressWarnings (
@@ -129,6 +149,7 @@ public class CsvEvaluationExample extends Example {
 		List<FieldName> inputFields = new ArrayList<FieldName>();
 
 		List<FieldName> activeFields = evaluator.getActiveFields();
+		List<FieldName> groupFields = evaluator.getGroupFields();
 		List<FieldName> predictedFields = evaluator.getPredictedFields();
 		List<FieldName> outputFields = evaluator.getOutputFields();
 
@@ -145,8 +166,8 @@ public class CsvEvaluationExample extends Example {
 				DataField dataField = evaluator.getDataField(inputField);
 				if(dataField != null){
 
-					if(!activeFields.contains(inputField)){
-						System.err.println("Not an active field: " + inputField.getValue());
+					if(!activeFields.contains(inputField) && !groupFields.contains(inputField)){
+						System.err.println("Not an input field: " + inputField.getValue());
 
 						if(predictedFields.contains(inputField) || outputFields.contains(inputField)){
 							inputField = null;
@@ -184,6 +205,16 @@ public class CsvEvaluationExample extends Example {
 			}
 
 			result.add(arguments);
+		}
+
+		if(groupFields.size() == 1){
+			FieldName groupField = groupFields.get(0);
+
+			result = EvaluatorUtil.groupRows(groupField, result);
+		} else
+
+		if(groupFields.size() > 1){
+			throw new IllegalArgumentException();
 		}
 
 		return result;

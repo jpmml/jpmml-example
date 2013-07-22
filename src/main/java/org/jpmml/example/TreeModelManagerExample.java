@@ -34,7 +34,7 @@ public class TreeModelManagerExample extends Example {
 	private PMML createGolfingModel(){
 		TreeModelManager treeModelManager = new TreeModelManager();
 
-		TreeModel treeModel = treeModelManager.createClassificationModel();
+		TreeModel treeModel = treeModelManager.createModel(MiningFunctionType.CLASSIFICATION);
 		treeModel.setModelName("golfing");
 
 		FieldName temperature = new FieldName("temperature");
