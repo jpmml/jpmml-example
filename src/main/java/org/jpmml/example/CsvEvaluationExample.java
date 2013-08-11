@@ -160,7 +160,7 @@ public class CsvEvaluationExample extends Example {
 			for(int i = 0; i < headerRow.size(); i++){
 				String headerCell = headerRow.get(i);
 
-				FieldName inputField = new FieldName(headerCell);
+				FieldName inputField = FieldName.create(headerCell);
 
 				// Check that the column is present in PMML data dictionary
 				DataField dataField = evaluator.getDataField(inputField);

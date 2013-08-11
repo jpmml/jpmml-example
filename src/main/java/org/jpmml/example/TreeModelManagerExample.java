@@ -37,25 +37,25 @@ public class TreeModelManagerExample extends Example {
 		TreeModel treeModel = treeModelManager.createModel(MiningFunctionType.CLASSIFICATION);
 		treeModel.setModelName("golfing");
 
-		FieldName temperature = new FieldName("temperature");
+		FieldName temperature = FieldName.create("temperature");
 		treeModelManager.addField(temperature, null, OpType.CONTINUOUS, DataType.DOUBLE, null);
 
-		FieldName humidity = new FieldName("humidity");
+		FieldName humidity = FieldName.create("humidity");
 		treeModelManager.addField(humidity, null, OpType.CONTINUOUS, DataType.DOUBLE, null);
 
-		FieldName windy = new FieldName("windy");
+		FieldName windy = FieldName.create("windy");
 		treeModelManager.addField(windy, null, OpType.CATEGORICAL, DataType.STRING, null);
 
 		DataField windyData = treeModelManager.getDataField(windy);
 		(windyData.getValues()).addAll(createValues("true", "false"));
 
-		FieldName outlook = new FieldName("outlook");
+		FieldName outlook = FieldName.create("outlook");
 		treeModelManager.addField(outlook, null, OpType.CATEGORICAL, DataType.STRING, null);
 
 		DataField outlookData = treeModelManager.getDataField(outlook);
 		(outlookData.getValues()).addAll(createValues("sunny", "overcast", "rain"));
 
-		FieldName whatIdo = new FieldName("whatIdo");
+		FieldName whatIdo = FieldName.create("whatIdo");
 		treeModelManager.addField(whatIdo, null, OpType.CATEGORICAL, DataType.STRING, FieldUsageType.PREDICTED);
 
 		DataField whatIdoData = treeModelManager.getDataField(whatIdo);
