@@ -107,8 +107,8 @@ public class EvaluationExample extends Example {
 	}
 
 	static
-	private String getDisplayName(DictionaryField dictionaryField, FieldName fieldName){
-		String result = dictionaryField.getDisplayName();
+	private String getDisplayName(Field field, FieldName fieldName){
+		String result = field.getDisplayName();
 		if(result == null){
 			result = fieldName.getValue();
 		}
@@ -117,8 +117,8 @@ public class EvaluationExample extends Example {
 	}
 
 	static
-	private String getDataType(DictionaryField dictionaryField){
-		DataType dataType = dictionaryField.getDataType();
+	private String getDataType(Field field){
+		DataType dataType = field.getDataType();
 
 		return dataType.name();
 	}
