@@ -7,6 +7,7 @@ import java.io.*;
 import java.util.*;
 
 import org.jpmml.evaluator.*;
+import org.jpmml.evaluator.FieldValue;
 
 import org.dmg.pmml.*;
 
@@ -53,12 +54,15 @@ public class AssociationModelEvaluationExample extends Example {
 
 		// Make sure that all user supplied item values conform to the data schema
 		for(String item : this.items){
-			Object preparedItem = associationModelEvaluator.prepare(activeField, item);
+			FieldValue result = associationModelEvaluator.prepare(activeField, item);
 
-			preparedItems.add(preparedItem);
+			// The element type of the Collection is Object, not FieldValue
+			preparedItems.add(FieldValueUtil.getValue(result));
 		}
 
-		Map<FieldName, ?> arguments = Collections.singletonMap(activeField, preparedItems);
+		FieldValue activeValue = FieldValueUtil.create(DataType.STRING, OpType.CATEGORICAL, preparedItems);
+
+		Map<FieldName, ?> arguments = Collections.singletonMap(activeField, activeValue);
 
 		Map<FieldName, ?> result = associationModelEvaluator.evaluate(arguments);
 
