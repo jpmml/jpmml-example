@@ -50,17 +50,8 @@ public class AssociationModelEvaluationExample extends Example {
 
 		FieldName activeField = activeFields.get(0);
 
-		List<Object> preparedItems = new ArrayList<Object>();
-
 		// Make sure that all user supplied item values conform to the data schema
-		for(String item : this.items){
-			FieldValue result = associationModelEvaluator.prepare(activeField, item);
-
-			// The element type of the Collection is Object, not FieldValue
-			preparedItems.add(FieldValueUtil.getValue(result));
-		}
-
-		FieldValue activeValue = FieldValueUtil.create(DataType.STRING, OpType.CATEGORICAL, preparedItems);
+		FieldValue activeValue = EvaluatorUtil.prepare(associationModelEvaluator, activeField, this.items);
 
 		Map<FieldName, ?> arguments = Collections.singletonMap(activeField, activeValue);
 

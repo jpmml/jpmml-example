@@ -115,7 +115,7 @@ public class TreeModelTranslationExample extends Example {
 	private String format(CompoundPredicate compoundPredicate){
 		StringBuffer sb = new StringBuffer();
 
-		List<Predicate> predicates = compoundPredicate.getContent();
+		List<Predicate> predicates = compoundPredicate.getPredicates();
 
 		sb.append('(').append(format(predicates.get(0))).append(')');
 

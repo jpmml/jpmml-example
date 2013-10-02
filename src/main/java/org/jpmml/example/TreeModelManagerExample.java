@@ -156,9 +156,7 @@ public class TreeModelManagerExample extends Example {
 	static
 	private CompoundPredicate createCompoundPredicate(CompoundPredicate.BooleanOperator operator, Predicate... predicates){
 		CompoundPredicate compoundPredicate = new CompoundPredicate(operator);
-
-		List<Predicate> content = compoundPredicate.getContent();
-		content.addAll(Arrays.asList(predicates));
+		(compoundPredicate.getPredicates()).addAll(Arrays.asList(predicates));
 
 		return compoundPredicate;
 	}
