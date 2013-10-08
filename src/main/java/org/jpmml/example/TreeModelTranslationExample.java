@@ -31,9 +31,9 @@ public class TreeModelTranslationExample extends Example {
 	public void execute() throws Exception {
 		PMML pmml = IOUtil.unmarshal(this.model);
 
-		TreeModelManager treeModelManager = new TreeModelManager(pmml);
+		TreeModel treeModel = PMMLManager.find(pmml.getModels(), TreeModel.class);
 
-		format(treeModelManager.getRoot(), "");
+		format(treeModel.getNode(), "");
 	}
 
 	static

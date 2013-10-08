@@ -3,23 +3,36 @@
  */
 package org.jpmml.example;
 
+import java.io.*;
 import java.util.*;
 
 import org.jpmml.evaluator.*;
-import org.jpmml.manager.*;
 
 import org.dmg.pmml.*;
 
-public class TreeModelManagerExample extends Example {
+import com.beust.jcommander.Parameter;
+
+public class TreeModelBuilderExample extends Example {
+
+	@Parameter (
+		names = {"--model"},
+		description = "The PMML file"
+	)
+	private File model = null;
+
 
 	static
 	public void main(String... args) throws Exception {
-		execute(TreeModelManagerExample.class, args);
+		execute(TreeModelBuilderExample.class, args);
 	}
 
 	@Override
 	public void execute() throws Exception {
 		PMML pmml = createGolfingModel();
+
+		if(this.model != null){
+			IOUtil.marshal(pmml, this.model);
+		}
 
 		TreeModelEvaluator treeModelEvaluator = new TreeModelEvaluator(pmml);
 
@@ -32,38 +45,36 @@ public class TreeModelManagerExample extends Example {
 
 	static
 	private PMML createGolfingModel(){
-		TreeModelManager treeModelManager = new TreeModelManager();
+		Header header = new Header()
+			.withCopyright("www.dmg.org")
+			.withDescription("A very small binary tree model to show structure.");
 
-		TreeModel treeModel = treeModelManager.createModel(MiningFunctionType.CLASSIFICATION);
-		treeModel.setModelName("golfing");
+		PMML pmml = new PMML(header, new DataDictionary(), "4.1");
+
+		Node n1 = createNode("1", new True(), "will play");
+
+		TreeModel treeModel = new TreeModel(new MiningSchema(), n1, MiningFunctionType.CLASSIFICATION);
+		treeModel.withModelName("golfing");
+
+		pmml.withModels(treeModel);
 
 		FieldName temperature = FieldName.create("temperature");
-		treeModelManager.addField(temperature, null, OpType.CONTINUOUS, DataType.DOUBLE, null);
+		declareField(pmml, treeModel, temperature, FieldUsageType.ACTIVE, null);
 
 		FieldName humidity = FieldName.create("humidity");
-		treeModelManager.addField(humidity, null, OpType.CONTINUOUS, DataType.DOUBLE, null);
+		declareField(pmml, treeModel, humidity, FieldUsageType.ACTIVE, null);
 
 		FieldName windy = FieldName.create("windy");
-		treeModelManager.addField(windy, null, OpType.CATEGORICAL, DataType.STRING, null);
-
-		DataField windyData = treeModelManager.getDataField(windy);
-		(windyData.getValues()).addAll(createValues("true", "false"));
+		declareField(pmml, treeModel, windy, FieldUsageType.ACTIVE, createValues("true", "false"));
 
 		FieldName outlook = FieldName.create("outlook");
-		treeModelManager.addField(outlook, null, OpType.CATEGORICAL, DataType.STRING, null);
-
-		DataField outlookData = treeModelManager.getDataField(outlook);
-		(outlookData.getValues()).addAll(createValues("sunny", "overcast", "rain"));
+		declareField(pmml, treeModel, outlook, FieldUsageType.ACTIVE, createValues("sunny", "overcast", "rain"));
 
 		FieldName whatIdo = FieldName.create("whatIdo");
-		treeModelManager.addField(whatIdo, null, OpType.CATEGORICAL, DataType.STRING, FieldUsageType.PREDICTED);
+		declareField(pmml, treeModel, whatIdo, FieldUsageType.PREDICTED, createValues("will play", "may play", "no play"));
 
-		DataField whatIdoData = treeModelManager.getDataField(whatIdo);
-		(whatIdoData.getValues()).addAll(createValues("will play", "may play", "no play"));
-
-		Node n1 = treeModelManager.getRoot();
-		n1.setId("1");
-		n1.setScore("will play");
+		DataDictionary dataDictionary = pmml.getDataDictionary();
+		dataDictionary.withNumberOfFields(5);
 
 		//
 		// Upper half of the tree
@@ -71,34 +82,34 @@ public class TreeModelManagerExample extends Example {
 
 		Predicate n2Predicate = createSimplePredicate(outlook, SimplePredicate.Operator.EQUAL, "sunny");
 
-		Node n2 = treeModelManager.addNode(n1, "2", n2Predicate);
-		n2.setScore("will play");
+		Node n2 = createNode("2", n2Predicate, "will play");
+		n1.withNodes(n2);
 
 		Predicate n3Predicate = createCompoundPredicate(CompoundPredicate.BooleanOperator.SURROGATE,
 			createSimplePredicate(temperature, SimplePredicate.Operator.LESS_THAN, "90"),
 			createSimplePredicate(temperature, SimplePredicate.Operator.GREATER_THAN, "50")
 		);
 
-		Node n3 = treeModelManager.addNode(n2, "3", n3Predicate);
-		n3.setScore("will play");
+		Node n3 = createNode("3", n3Predicate, "will play");
+		n2.withNodes(n3);
 
 		Predicate n4Predicate = createSimplePredicate(humidity, SimplePredicate.Operator.LESS_THAN, "80");
 
-		Node n4 = treeModelManager.addNode(n3, "4", n4Predicate);
-		n4.setScore("will play");
+		Node n4 = createNode("4", n4Predicate, "will play");
+		n3.withNodes(n4);
 
 		Predicate n5Predicate = createSimplePredicate(humidity, SimplePredicate.Operator.GREATER_OR_EQUAL, "80");
 
-		Node n5 = treeModelManager.addNode(n3, "5", n5Predicate);
-		n5.setScore("no play");
+		Node n5 = createNode("5", n5Predicate, "no play");
+		n3.withNodes(n5);
 
 		Predicate n6Predicate = createCompoundPredicate(CompoundPredicate.BooleanOperator.OR,
 			createSimplePredicate(temperature, SimplePredicate.Operator.GREATER_OR_EQUAL, "90"),
 			createSimplePredicate(temperature, SimplePredicate.Operator.LESS_OR_EQUAL, "50")
 		);
 
-		Node n6 = treeModelManager.addNode(n2, "6", n6Predicate);
-		n6.setScore("no play");
+		Node n6 = createNode("6", n6Predicate, "no play");
+		n2.withNodes(n6);
 
 		//
 		// Lower half of the tree
@@ -109,8 +120,8 @@ public class TreeModelManagerExample extends Example {
 			createSimplePredicate(outlook, SimplePredicate.Operator.EQUAL, "rain")
 		);
 
-		Node n7 = treeModelManager.addNode(n1, "7", n7Predicate);
-		n7.setScore("may play");
+		Node n7 = createNode("7", n7Predicate, "may play");
+		n1.withNodes(n7);
 
 		Predicate n8Predicate = createCompoundPredicate(CompoundPredicate.BooleanOperator.AND,
 			createSimplePredicate(temperature, SimplePredicate.Operator.GREATER_THAN, "60"),
@@ -120,18 +131,36 @@ public class TreeModelManagerExample extends Example {
 			createSimplePredicate(windy, SimplePredicate.Operator.EQUAL, "false")
 		);
 
-		Node n8 = treeModelManager.addNode(n7, "8", n8Predicate);
-		n8.setScore("may play");
+		Node n8 = createNode("8", n8Predicate, "may play");
+		n7.withNodes(n8);
 
 		Predicate n9Predicate = createCompoundPredicate(CompoundPredicate.BooleanOperator.AND,
 			createSimplePredicate(outlook, SimplePredicate.Operator.EQUAL, "rain"),
 			createSimplePredicate(humidity, SimplePredicate.Operator.LESS_THAN, "70")
 		);
 
-		Node n9 = treeModelManager.addNode(n7, "9", n9Predicate);
-		n9.setScore("no play");
+		Node n9 = createNode("9", n9Predicate, "no play");
+		n7.withNodes(n9);
 
-		return treeModelManager.getPmml();
+		return pmml;
+	}
+
+	static
+	private void declareField(PMML pmml, Model model, FieldName name, FieldUsageType usage, List<Value> values){
+		OpType opType = (values != null ? OpType.CATEGORICAL : OpType.CONTINUOUS);
+		DataType dataType = (values != null ? DataType.STRING : DataType.DOUBLE);
+
+		DataField dataField = new DataField(name, opType, dataType)
+			.withValues(values);
+
+		DataDictionary dataDictionary = pmml.getDataDictionary();
+		dataDictionary.withDataFields(dataField);
+
+		MiningField miningField = new MiningField(name)
+			.withUsageType((FieldUsageType.ACTIVE).equals(usage) ? null : usage);
+
+		MiningSchema miningSchema = model.getMiningSchema();
+		miningSchema.withMiningFields(miningField);
 	}
 
 	static
@@ -146,18 +175,22 @@ public class TreeModelManagerExample extends Example {
 	}
 
 	static
-	private SimplePredicate createSimplePredicate(FieldName name, SimplePredicate.Operator operator, String value){
-		SimplePredicate simplePredicate = new SimplePredicate(name, operator);
-		simplePredicate.setValue(value);
+	private Node createNode(String id, Predicate predicate, String score){
+		return new Node()
+			.withId(id)
+			.withPredicate(predicate)
+			.withScore(score);
+	}
 
-		return simplePredicate;
+	static
+	private SimplePredicate createSimplePredicate(FieldName name, SimplePredicate.Operator operator, String value){
+		return new SimplePredicate(name, operator)
+			.withValue(value);
 	}
 
 	static
 	private CompoundPredicate createCompoundPredicate(CompoundPredicate.BooleanOperator operator, Predicate... predicates){
-		CompoundPredicate compoundPredicate = new CompoundPredicate(operator);
-		(compoundPredicate.getPredicates()).addAll(Arrays.asList(predicates));
-
-		return compoundPredicate;
+		return new CompoundPredicate(operator)
+			.withPredicates(predicates);
 	}
 }
