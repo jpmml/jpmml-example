@@ -7,6 +7,7 @@ import java.io.*;
 import java.util.*;
 
 import org.jpmml.evaluator.*;
+import org.jpmml.evaluator.FieldValue;
 import org.jpmml.manager.*;
 
 import org.dmg.pmml.*;
@@ -71,7 +72,7 @@ public class CsvEvaluationExample extends Example {
 
 		CsvUtil.Table inputTable = CsvUtil.readTable(this.input, this.separator);
 
-		List<Map<FieldName, Object>> rows = prepare(inputTable, evaluator);
+		List<Map<FieldName, FieldValue>> rows = prepare(inputTable, evaluator);
 
 		CsvUtil.Table outputTable = new CsvUtil.Table();
 		outputTable.setSeparator(inputTable.getSeparator());
@@ -110,7 +111,7 @@ public class CsvEvaluationExample extends Example {
 					bodyRow.addAll(inputTable.get(line + 1));
 				}
 
-				Map<FieldName, ?> arguments = rows.get(line);
+				Map<FieldName, FieldValue> arguments = rows.get(line);
 
 				Map<FieldName, ?> result = evaluator.evaluate(arguments);
 
@@ -143,9 +144,7 @@ public class CsvEvaluationExample extends Example {
 		value = {"unused"}
 	)
 	static
-	private List<Map<FieldName, Object>> prepare(List<List<String>> table, Evaluator evaluator){
-		List<Map<FieldName, Object>> result = new ArrayList<Map<FieldName, Object>>();
-
+	private List<Map<FieldName, FieldValue>> prepare(List<List<String>> table, Evaluator evaluator){
 		List<FieldName> inputFields = new ArrayList<FieldName>();
 
 		List<FieldName> activeFields = evaluator.getActiveFields();
@@ -183,11 +182,13 @@ public class CsvEvaluationExample extends Example {
 			}
 		}
 
+		List<Map<FieldName, Object>> stringRows = new ArrayList<Map<FieldName, Object>>();
+
 		body:
 		for(int line = 1; line < table.size(); line++){
 			List<String> bodyRow = table.get(line);
 
-			Map<FieldName, Object> arguments = new LinkedHashMap<FieldName, Object>();
+			Map<FieldName, Object> row = new LinkedHashMap<FieldName, Object>();
 
 			for(int i = 0; i < inputFields.size(); i++){
 				String bodyCell = bodyRow.get(i);
@@ -201,20 +202,35 @@ public class CsvEvaluationExample extends Example {
 					bodyCell = null;
 				}
 
-				arguments.put(inputField, evaluator.prepare(inputField, bodyCell));
+				row.put(inputField, bodyCell);
 			}
 
-			result.add(arguments);
+			stringRows.add(row);
 		}
 
 		if(groupFields.size() == 1){
 			FieldName groupField = groupFields.get(0);
 
-			result = EvaluatorUtil.groupRows(groupField, result);
+			stringRows = EvaluatorUtil.groupRows(groupField, stringRows);
 		} else
 
 		if(groupFields.size() > 1){
 			throw new IllegalArgumentException();
+		}
+
+		List<Map<FieldName, FieldValue>> result = new ArrayList<Map<FieldName, FieldValue>>();
+
+		for(int i = 0; i < stringRows.size(); i++){
+			Map<FieldName, Object> stringRow = stringRows.get(i);
+
+			Map<FieldName, FieldValue> row = new LinkedHashMap<FieldName, FieldValue>();
+
+			Collection<Map.Entry<FieldName, Object>> entries = stringRow.entrySet();
+			for(Map.Entry<FieldName, Object> entry : entries){
+				row.put(entry.getKey(), EvaluatorUtil.prepare(evaluator, entry.getKey(), entry.getValue()));
+			}
+
+			result.add(row);
 		}
 
 		return result;
